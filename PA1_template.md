@@ -1,31 +1,29 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
-    
----
+# Reproducible Research: Peer Assessment 1
 ## Loading and preprocessing the data
 ### 1.Load the data
-```{r load}
+
+```r
 data<-read.csv("activity.csv")
 ```
 
 ### 2. Tansform the data - get a complete set with no missing values
-```{r transform}
+
+```r
 completeData<-subset(data,complete.cases(data))
 ```
 
 ## What is mean total number of steps taken per day?
 ### 1. Calculate the total number of steps taken per day
-```{r dailytotal}
+
+```r
 dailytotals<-aggregate(completeData$steps,
                        list(date =completeData$date),
                        sum)
 ```
 
 ### 2. Make a histogram of the total number of steps taken each day
-```{r histogarm}
+
+```r
 hist(dailytotals$x,
      main=NULL,
      xlab="Number of steps",
@@ -36,6 +34,8 @@ title(main = "Total Number of Steps Taken Each Day",
       font.main=4)
 ```
 
+![](PA1_template_files/figure-html/histogarm-1.png)<!-- -->
+
 ### 3.Report the mean and median of the total number of steps taken per day
 
 * Calculate mean and median
@@ -43,7 +43,8 @@ title(main = "Total Number of Steps Taken Each Day",
 * Add lines for mean and median 
 * Add legend  (note that the line are on top of each other)
   
-``` {r mean-median}
+
+```r
 dailytotals_mean <-mean(dailytotals$x)
 dailytotals_median <-median(dailytotals$x)
 hist(dailytotals$x,
@@ -69,6 +70,8 @@ title(main = "Total Number of Steps Taken Each Day",
       font.main=4)
 ```
 
+![](PA1_template_files/figure-html/mean-median-1.png)<!-- -->
+
 ## What is the average daily activity pattern?
 ### 1. Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days
 
@@ -76,7 +79,8 @@ title(main = "Total Number of Steps Taken Each Day",
 * Create HH:MM format for plot
 * Plot graph
 
-```{r dailymean}
+
+```r
 dailymean<-aggregate(completeData$steps,
                     list(interval =completeData$interval) ,
                      mean)
@@ -96,6 +100,11 @@ xLabels<-seq(0,2000,500)
 axis(1,at=xLabels,labels = dailymean[dailymean$interval %in% xLabels,]$HHMM)
 title(main = "Average Number of Steps per 5 Minute Interval",
       font.main=4)
+```
+
+![](PA1_template_files/figure-html/dailymean-1.png)<!-- -->
+
+```r
 #
 ```
 
@@ -105,7 +114,8 @@ title(main = "Average Number of Steps per 5 Minute Interval",
 * Plot graph
 * Add line, Add point and label, Add Legend
 
-```{r maxinterval}
+
+```r
 maxAverage<-max(dailymean$x)
 intervalWithMax<-dailymean[maxAverage==dailymean$x,]$interval
 
@@ -139,14 +149,17 @@ text(intervalWithMax,
      pos = 4)
 ```
 
+![](PA1_template_files/figure-html/maxinterval-1.png)<!-- -->
+
 ## Imputing missing values
 ### 1. Calculate and report the total number of missing values in the dataset
 
-```{r nacount}
+
+```r
  narowcount<-length(data$steps[is.na(data$steps)])
 ```
 
- There are `r narowcount` rows in the source data the have na.
+ There are 2304 rows in the source data the have na.
 
 ## 2. Devise a strategy for filling in all of the missing values in the dataset.
   Since we already have the mean per 5 minute interval let's use that to fill 
@@ -157,7 +170,8 @@ text(intervalWithMax,
     that has all the missing data
     
     
-```{r nafill}
+
+```r
 MissingData<-data[is.na(data$steps),]
 naMapfill<-merge(MissingData,dailymean,by.x="interval",by.y ="interval")
 ```
@@ -168,7 +182,8 @@ naMapfill<-merge(MissingData,dailymean,by.x="interval",by.y ="interval")
  * Create NewData by rbinding completedata and naMapfill
     
  
-```{r newdata}
+
+```r
  naMapfill$steps<-naMapfill$x
  
  NewData<-rbind(completeData[c("steps","date","interval")],
@@ -184,7 +199,8 @@ naMapfill<-merge(MissingData,dailymean,by.x="interval",by.y ="interval")
 * Plot 
 * Add lines for mean and median 
 * Add legend  
-``` {r NewHist}
+
+```r
 newdailytotals<-aggregate(NewData$steps,
                        list(date =NewData$date),
                        sum)
@@ -212,8 +228,9 @@ legend("topright",
        lwd=2)
 title(main ="Total Number of Steps Taken Each Day with Missing data Filled In",
       font.main=4)
-
 ```
+
+![](PA1_template_files/figure-html/NewHist-1.png)<!-- -->
 
 ## Do these values differ from the estimates from the first part of the assignment? 
 
@@ -227,7 +244,8 @@ title(main ="Total Number of Steps Taken Each Day with Missing data Filled In",
 
 #1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” 
 
-```{r week}
+
+```r
 #set days of week
 NewData$week<-weekdays(as.POSIXct(NewData$date, format ="%Y-%m-%d"))
 #set Weekend
@@ -238,16 +256,25 @@ NewData$week[NewData$week != "Weekend"]<-"Weekday"
 #2.Make a panel plot containing a time series plot,5-minute interval by average number of steps taken
 
 * First get average steps for Interval and weekday/weekend
-```{r WeekAgg}
+
+```r
 weekdata<-aggregate(NewData$steps,
           list(interval=NewData$interval,
                week = NewData$week),
         mean)
 ```
 * plot the data
-```{r weekplot}
+
+```r
 # load ggplot2
 library(ggplot2)
+```
+
+```
+## Warning: package 'ggplot2' was built under R version 3.2.5
+```
+
+```r
 # build plot - base info
 g<-ggplot(weekdata,aes(interval,x))
 g<-g+geom_line(col = "steelblue",lwd=1) 
@@ -261,3 +288,5 @@ g<-g+theme(strip.background = element_rect(colour = "wheat",
                                            fill = "wheat",size = 3))
 print(g)
 ```
+
+![](PA1_template_files/figure-html/weekplot-1.png)<!-- -->
